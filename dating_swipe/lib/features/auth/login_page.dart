@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'signup_page.dart';
+import 'reset_password_page.dart'; // adjust path if needed
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -123,6 +124,17 @@ class _LoginPageState extends State<LoginPage> {
                         child: const Text("Sign up"),
                       ),
                     ],
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ResetPasswordPage(),
+                        ),
+                      );
+                    },
+                    child: const Text("Forgot password?"),
                   ),
                 ],
               ),

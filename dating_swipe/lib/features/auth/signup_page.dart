@@ -13,32 +13,64 @@ class _SignupPageState extends State<SignupPage> {
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
+
   bool _loading = false;
   String? _error;
 
   Future<void> _signup() async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    final email = _emailCtrl.text.trim();
+    final password = _passCtrl.text.trim();
+    final name = _nameCtrl.text.trim();
+
+    if (email.isEmpty || password.length < 6) {
+      setState(() {
+        _error = "Email must be valid and password at least 6 characters.";
+        _loading = false;
+      });
+      return;
+    }
 
     try {
       final res = await Supabase.instance.client.auth.signUp(
-        email: _emailCtrl.text.trim(),
-        password: _passCtrl.text.trim(),
+        email: email,
+        password: password,
+        data: {'name': name},
       );
 
-      if (res.user == null) {
-        setState(() => _error = 'Signup failed');
-      } else {
-        // Optionally store name in a "profiles" table or preferences
-        Navigator.push(
+      if (res.user != null) {
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const LoginPage()),
         );
+      } else {
+        setState(() {
+          _error = "Signup failed. Please try again.";
+        });
       }
+    } on AuthException catch (e) {
+      setState(() {
+        _error = e.message;
+      });
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() {
+        _error = "Unexpected error: $e";
+      });
     } finally {
       setState(() => _loading = false);
     }
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
+    super.dispose();
   }
 
   @override
@@ -116,7 +148,11 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                   const SizedBox(height: 16),
                   if (_error != null)
-                    Text(_error!, style: const TextStyle(color: Colors.red)),
+                    Text(
+                      _error!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
                   const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -124,7 +160,12 @@ class _SignupPageState extends State<SignupPage> {
                       const Text("Already have an account?"),
                       TextButton(
                         onPressed: () {
-                          Navigator.pushReplacementNamed(context, '/login');
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LoginPage(),
+                            ),
+                          );
                         },
                         child: const Text("Log in"),
                       ),
